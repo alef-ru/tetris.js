@@ -1,0 +1,16 @@
+.game-field{
+    border: 1px black solid;
+    display: inline-block;    
+}
+
+.game-info{
+    border: 1px black dashed;
+    display: inline-block;
+    vertical-align: top;
+    padding: 20px;
+    font-size: larger;  
+}
+
+#tetris-field{
+
+}
