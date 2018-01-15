@@ -1,7 +1,7 @@
 WIDTH = 20;
 HEIGHT = 30;
 CUBE_SIDE = 20;
-GAME_SPEED = 2;
+var speed = 2; 
 var x,y;
 var f;
 
@@ -28,8 +28,8 @@ window.onload = function(){
 
     document.addEventListener("keydown", keyPush);
     newFigure();
-    gameTimer = setInterval(game, 1000 / GAME_SPEED)
-    refreshTimer = setInterval(refresh, 1000 / 15)
+    gameTimer = setInterval(game, 1000 / speed)
+    refreshTimer = setInterval(refresh, 1000 / 30)
     
 
 }
@@ -73,13 +73,16 @@ function refresh(){
     ctx.fillStyle = "lime";
     f.concat([[0, 0]]).forEach(function(i, index){
         ctx.fillRect((x + i[0]) * CUBE_SIDE, (y + i[1]) * CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
+        ctx.strokeRect((x + i[0]) * CUBE_SIDE, (y + i[1]) * CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
     });
 
     ctx.fillStyle = "green";
     for (var xx = 0; xx < WIDTH; xx++)
         for (var yy = 0; yy < HEIGHT; yy++)
-            if (field[xx][yy])
+            if (field[xx][yy]){
                 ctx.fillRect(xx * CUBE_SIDE, yy * CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
+                ctx.strokeRect(xx * CUBE_SIDE, yy * CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
+            }
 }
 
 function game(){
@@ -123,12 +126,27 @@ function moveDown() {
 }
 
 function gameOver(){
-    clearInterval(gameTimer)
-    clearInterval(refreshTimer)
+    clearInterval(gameTimer);
+    clearInterval(refreshTimer);
+    refresh();
     ctx.font = "30px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = "red";
     ctx.fillText("Game Over", canv.width / 2, canv.height / 2);
+}
+
+function pause(){
+    clearInterval(gameTimer);
+    clearInterval(refreshTimer);
+    document.getElementById("pause").value = "Resume";
+    document.getElementById("pause").onclick = resume
+}
+
+function resume() {
+    gameTimer = setInterval(game, 1000 / speed)
+    refreshTimer = setInterval(refresh, 1000 / 30)
+    document.getElementById("pause").value = "Pause";
+    document.getElementById("pause").onclick = pause
 }
 
 function endOfTurn(){
@@ -151,7 +169,7 @@ function endOfTurn(){
                 field[xx][yyy] = field[xx][yyy-1];
         yy++; // Current row is replaced, so it should be checked again
         document.getElementById("score").innerHTML++;
-        var speed = Math.floor(document.getElementById("score").innerHTML / 5 + GAME_SPEED);
+        speed = Math.floor(document.getElementById("score").innerHTML / 5 + GAME_SPEED);
         document.getElementById("speed").innerHTML = speed;
         clearInterval(gameTimer)
         gameTimer = setInterval(game, 1000 / speed)
