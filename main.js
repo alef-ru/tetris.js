@@ -1,12 +1,12 @@
-WIDTH = 20;
-HEIGHT = 30;
-CUBE_SIDE = 20;
-var speed = 2; 
-var x,y;
-var f;
 
-FIGURES = [ //Any figure consists of 4 points.
-    //The central point always has a coordinates [0,0], so I list only the rest 3 points. 
+//======= Figure object start ========
+function Figure(){
+    y = 1; x = WIDTH / 2;
+    this._figure = this._FIGURES[Math.floor(Math.random() * this._FIGURES.length)].concat([[0, 0]])
+}
+
+Figure.prototype._FIGURES = [ //Any figure consists of 4 points.
+    //The central point always has a coordinates [0,0], so I list only the rest 3 points.
     [[0, -1],   [0, 1],  [0, 2]], // This is a stick
     [[-1, -1],  [0, -1], [1, 0]], //
     [[1, -1],   [0, -1], [-1, 0]],
@@ -14,7 +14,81 @@ FIGURES = [ //Any figure consists of 4 points.
     [[-2, 0],   [-1, 0], [0, -1]],
     [[0, -1],   [1, 0],  [2, 0]],
     [[-1, -1],  [0, -1], [-1, 0]]
-]
+];
+
+// 90 degree, clockwise
+Figure.prototype.rotate = function(){
+    // FixMe: rotating square around any of its points looks like just shifting.
+
+    var turnedFigure = new Array(this._figure.length);
+    for (var i = 0; i < this._figure.length; i++)
+        turnedFigure[i] = [-this._figure[i][1], this._figure[i][0]];
+    if (!this.isOverlappedOrOutOfField(0, 0, turnedFigure))
+        this._figure = turnedFigure
+};
+
+Figure.prototype.draw = function(){
+    ctx.fillStyle = "lime";
+    this._figure.forEach(function(i){
+        ctx.fillRect((x + i[0]) * CUBE_SIDE, (y + i[1]) * CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
+        ctx.strokeRect((x + i[0]) * CUBE_SIDE, (y + i[1]) * CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
+    });
+};
+
+Figure.prototype.moveLeft = function() {
+    console.log("moveLeft");
+    if (!this.isOverlappedOrOutOfField(-1, 0))
+        x--;
+};
+
+Figure.prototype.moveRight = function() {
+    console.log("moveRight");
+    if (!this.isOverlappedOrOutOfField(1, 0))
+        x++;
+};
+
+Figure.prototype.isOverlappedOrOutOfField = function(xShift, yShift, figure){
+    if (!figure)
+        figure = this._figure;
+    var result = false;
+    figure.forEach(function(i, index){
+        var newX = x + i[0] + xShift;
+        var newY = y + i[1] + yShift;
+
+        // Check if out of field first
+        if (newX < 0 || newY < 0 || newX >= WIDTH || newY >= HEIGHT)
+            result = true;
+        else if (field[newX][newY])
+            result = true
+    });
+    return result;
+};
+
+Figure.prototype.moveDown = function() {
+    if (this.isOverlappedOrOutOfField(0,1))
+        if (y==1) gameOver();
+        else endOfTurn();
+    else
+        y++;
+};
+
+Figure.prototype.freeze = function() {
+    this._figure.forEach(function (i, index) {
+        field[(x + i[0])][(y + i[1])] = 1;
+    });
+};
+//======= Figure object end ========
+
+
+
+WIDTH = 20;
+HEIGHT = 30;
+CUBE_SIDE = 20;
+var speed = 2; 
+var x,y;
+var f = new Figure();
+
+
 
 window.onload = function(){
     canv = document.getElementById("tetris-field");
@@ -27,54 +101,36 @@ window.onload = function(){
         field[i] = new Array(HEIGHT)
 
     document.addEventListener("keydown", keyPush);
-    newFigure();
-    gameTimer = setInterval(game, 1000 / speed)
+    gameTimer = setInterval(game, 1000 / speed);
     refreshTimer = setInterval(refresh, 1000 / 30)
     
 
-}
+};
 
 function keyPush(evt){
     switch (evt.keyCode) {
         case 37:
-            moveLeft()
+            f.moveLeft();
             break;
         case 39:
-            moveRight()
+            f.moveRight();
             break;
         case 40:
-            moveDown()
+            f.moveDown();
             break;  
         case 32:
-            rotate()
+            f.rotate();
             break;  
         default:
             console.log("Key pressed, key code: " + evt.keyCode);
     }
 }
 
-// 90 degree, clockwise
-function rotate(){
-    console.log("rotate");
-
-    // FixMe: rotating square around any of it points looks like just shifting.
-
-    var g = new Array(f.length)
-    for (var i = 0; i < f.length; i++)
-        g[i] = [-f[i][1], f[i][0]];
-    if (!isOverlappedOrOutOfField(0, 0, g))
-        f = g
-}
-
 function refresh(){
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canv.width, canv.height);
     
-    ctx.fillStyle = "lime";
-    f.concat([[0, 0]]).forEach(function(i, index){
-        ctx.fillRect((x + i[0]) * CUBE_SIDE, (y + i[1]) * CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
-        ctx.strokeRect((x + i[0]) * CUBE_SIDE, (y + i[1]) * CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
-    });
+    f.draw();
 
     ctx.fillStyle = "green";
     for (var xx = 0; xx < WIDTH; xx++)
@@ -86,49 +142,17 @@ function refresh(){
 }
 
 function game(){
-    if (isOverlappedOrOutOfField(0,1,f))
-        if (y==1) gameOver();
-        else endOfTurn();
-    else
-        y++;
-}
-
-function moveLeft() {
-    console.log("moveLeft");
-    if (!isOverlappedOrOutOfField(-1, 0, f))
-        x--;
- }
-
-function moveRight() {
-    if (!isOverlappedOrOutOfField(1, 0, f)) 
-        x++;
-    console.log("moveRight");
-}
-
-function isOverlappedOrOutOfField(xShift, yShift, f){
-    var result = false;
-    f.concat([[0, 0]]).forEach(function(i, index){
-        var newX = x + i[0] + xShift;
-        var newY = y + i[1] + yShift;
-
-        // Check if out of field first
-        if (newX < 0 || newY < 0 || newX >= WIDTH || newY >= HEIGHT)
-            result = true
-        else if (field[newX][newY])
-            result = true
-    });
-    return result;
-}
-
-function moveDown() {
-    console.log("moveDown");
-    game();
+    f.moveDown();
 }
 
 function gameOver(){
     clearInterval(gameTimer);
     clearInterval(refreshTimer);
     refresh();
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(0, 0, canv.width, canv.height);
+
     ctx.font = "30px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = "red";
@@ -143,19 +167,15 @@ function pause(){
 }
 
 function resume() {
-    gameTimer = setInterval(game, 1000 / speed)
+    gameTimer = setInterval(game, 1000 / (speed))
     refreshTimer = setInterval(refresh, 1000 / 30)
     document.getElementById("pause").value = "Pause";
     document.getElementById("pause").onclick = pause
 }
 
 function endOfTurn(){
-    field[x][y] = 1;
-    f.forEach(function (i, index) {
-        field[(x + i[0])][(y + i[1])] = 1;
-    });
-
-    newFigure();
+    f.freeze();
+    f = new Figure();
 
     // Check if any row is complete
     rowLoop:
@@ -169,17 +189,11 @@ function endOfTurn(){
                 field[xx][yyy] = field[xx][yyy-1];
         yy++; // Current row is replaced, so it should be checked again
         document.getElementById("score").innerHTML++;
-        speed = Math.floor(document.getElementById("score").innerHTML / 5 + GAME_SPEED);
         document.getElementById("speed").innerHTML = speed;
-        clearInterval(gameTimer)
-        gameTimer = setInterval(game, 1000 / speed)
+        clearInterval(gameTimer);
+        gameTimer = setInterval(game, 1000 / (speed))
 
     }
     
 
-}
-
-function newFigure(){
-    y = 1; x = WIDTH / 2;
-    f = FIGURES[Math.floor(Math.random() * FIGURES.length)]
 }
