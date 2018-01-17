@@ -6,7 +6,6 @@
     <title>Tesris JS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
-    <script src="main.js"></script>
 </head>
 <body>
     <div class="game-field">
@@ -17,7 +16,10 @@
     <div class="game-info">
     <p>Score: <span id="score">0</span></p>
     <p>Speed: <span id="speed">1</span></p>
-    <input type="button" onclick="pause()" id="pause" value = "Pause"/>
+    <input type="button" onclick="game.pause()" id="pause" value = "Pause"/>
     </div>
+    <script src="main.js"></script>
 </body>
+
+
 </html>
